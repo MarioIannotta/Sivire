@@ -1,0 +1,21 @@
+{
+  "name": "sivire",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . Sivire --overwrite --platform=mas --icon=./src/images/Icon.icns --out=build; open build"
+  },
+  "keywords": [],
+  "author": "Mario Iannotta",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^8.0.0",
+    "electron-reload": "^1.5.0",
+    "electron-store": "^5.1.1"
+  },
+  "devDependencies": {
+    "electron-packager": "^14.2.1"
+  }
+}

@@ -1,0 +1,90 @@
+<html>
+
+<head>
+    <style>
+        html {
+            --accent-color: blue;
+            --background-color: white;
+            --text-color: black;
+        }
+
+        * {
+            margin: 0pt;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 10pt;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 10pt;
+        }
+
+        #container {
+            width: 200pt;
+            margin: 20px auto;
+        }
+
+        .field {
+            width: 100%;
+        }
+
+        .setting-label {
+            float: left;
+            width: 30%;
+            box-sizing: border-box;
+        }
+
+        .setting-options {
+            float: left;
+            width: 70%;
+        }
+
+        .setting-footer {
+            float: left;
+            padding: 4pt 0pt 15pt 0pt;
+            font-size: 9pt;
+            opacity: 0.6;
+        }
+
+        .field .radio {
+            margin-left: 10pt;
+        }
+
+        .field .radio-label {
+            padding-left: 5pt;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div class="field">
+            <div class="setting-label">
+                <label>Mask:</label>
+            </div>
+            <div class="setting-options">
+                <input class="radio" id="mask-off" type="radio" name="mask" value="off" onclick='setOffMask()' />
+                <label class="radio-label" for="mask-off">Off</label>
+                <input class="radio" id="mask-black" type="radio" name="mask" value="black" onclick='setBlackMask()' />
+                <label class="radio-label" for="mask-black">Black</label>
+            </div>
+            <div class="setting-footer">Set the mask for non-rectangular displays like iPhone X, Xs, etc.</div>
+        </div>
+        <div class="field">
+            <div class="setting-label">
+                <label>Codec:</label>
+            </div>
+            <div class="setting-options">
+                <input class="radio" id="codec-hvec" type="radio" name="codec" value="hevc" onclick='setHVECCodec()' />
+                <label class="radio-label" for="codec-hvec">hvec</label>
+                <input class="radio" id="codec-h264" type="radio" name="codec" value="h264" onclick='setH264Codec()' />
+                <label class="radio-label" for="codec-h264">h264</label>
+            </div>
+            <div class="setting-footer">Specifies the codec type for the recording.</div>
+        </div>
+    </div>
+    <script src="./settings-renderer.js"></script>
+</body>
+
+</html>
