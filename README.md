@@ -5,7 +5,7 @@ Sivire (**Si**mulator **Vi**deo **Re**corder) is a simple app that lets you reco
 <img src="https://github.com/MarioIannotta/Sivire/blob/master/demo.gif?raw=true" alt="Sivire Demo" width="800"/>
 
 ## Disclaimer
-Sivire leverages on Xcode command line tools to record simulators, please make sure you have Xcode 11.4+ installed with the proper command line tools selected.
+Sivire leverages on Xcode command line tools to record simulators, please make sure you have everything installed before running the application.
 
 Run `xcode-select --install` in your terminal to install Xcode command line tools. 
 
