@@ -87,11 +87,12 @@ module.exports = class XCRunController {
         recordVideoProcess.on('close', code => {
             diagnosticLog(`Recording ended with exit code ${code}`)
             if (code === 0) {
-                completion(null, fileName)
+                completion(null)
             } else {
-                completion({ exitCode: code }, null)
+                completion({ exitCode: code })
             }
         })
+        return fileName
     }
 
     stopRecording(completion) {

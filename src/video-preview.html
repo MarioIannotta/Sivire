@@ -1,0 +1,49 @@
+<html>
+
+<head></head>
+<style>
+    html {
+        --accent-color: blue;
+        --background-color: white;
+        --text-color: black;
+    }
+
+    body {
+        background-color: var(--background-color);
+    }
+
+    #video-preview {
+        float: left;
+        height: 560px;
+        width: auto;
+    }
+
+    #timeline {
+        float: left;
+        clear: both;
+        margin-top: 10;
+        box-sizing: border-box;
+        width: 300px;
+        height: 50px;
+        overflow: hidden;
+        overflow-x: auto;
+        white-space: nowrap;
+        border: 2px solid  rgba(0, 0, 0, 0.3);
+        border-radius: 4pt;
+    }
+
+    #timeline .screenshot {
+        display: inline-block;
+    }
+</style>
+
+<body>
+    <div id="video-preview">
+    </div>
+    <div id="timeline">
+
+    </div>
+    <script src="./video-preview-renderer.js"></script>
+</body>
+
+</html>

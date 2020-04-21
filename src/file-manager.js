@@ -1,4 +1,8 @@
-const { app } = require('electron')
+var { app } = require('electron')
+// not sure if this is the right thing to do
+if (!app) {
+    var { app } = require('electron').remote
+}
 const fs = require('fs')
 const Path = require('path')
 
@@ -8,12 +12,14 @@ class FileManager {
         this.basePath = app.getPath('userData')
         this.logsPath = `${this.basePath}/logs`
         this.recordingsPath = `${this.basePath}/recordings`
-        this.initFolderIfNeeded(this.logsPath)
-        this.initFolderIfNeeded(this.recordingsPath)
+        this.thumbnailsPath = `${this.basePath}/thumbnails`
+        // this.initFolderIfNeeded(this.logsPath)
+        // this.initFolderIfNeeded(this.recordingsPath)
+        this.initFolderIfNeeded(this.thumbnailsPath)
     }
 
     initFolderIfNeeded(folder) {
-        fs.mkdir(folder, error => { })
+        fs.mkdir(folder, _ => { })
         this.deleteFolderRecursive(folder)
     }
 
@@ -35,5 +41,6 @@ let fileManager = new FileManager()
 
 module.exports = {
     logsPath: fileManager.logsPath,
-    recordingsPath: fileManager.recordingsPath
+    recordingsPath: fileManager.recordingsPath,
+    thumbnailsPath: fileManager.thumbnailsPath
 }

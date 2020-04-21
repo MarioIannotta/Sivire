@@ -1,4 +1,4 @@
-const { dialog, BrowserWindow, shell } = require('electron')
+const { dialog, BrowserWindow } = require('electron')
 const { showLogs } = require('./logger')
 const XCRunController = require('./xcrun-controller')
 const Settings = require('./settings')
@@ -10,6 +10,7 @@ module.exports = class SimulatorsController {
         this.isLoading = true
         this.onListUpdate = onListUpdate
         this.recordingSimulatorUDID = null
+        this.fileName = null
         this.xcrunController = new XCRunController()
         this.timer = setInterval(_ => {
             this.xcrunController.fetchSimulators((error, runtimes) => {
@@ -39,11 +40,9 @@ module.exports = class SimulatorsController {
     startRecording(simulatorUDID) {
         this.recordingSimulatorUDID = simulatorUDID
         let settings = (new Settings()).loadSettings()
-        this.xcrunController.startRecording(this.recordingSimulator(), settings.mask, settings.codec, (error, fileName) => {
+        this.fileName = this.xcrunController.startRecording(this.recordingSimulator(), settings.mask, settings.codec, (error) => {
             if (error) {
                 showErrorDialog()
-            } else {
-                shell.openItem(fileName)
             }
         })
         this.onListUpdate(this)
@@ -57,6 +56,7 @@ module.exports = class SimulatorsController {
         })
         this.recordingSimulatorUDID = null
         this.onListUpdate(this)
+        return this.fileName
     }
 }
 
