@@ -1,5 +1,10 @@
-const ffmpeg = require('fluent-ffmpeg')
+const ffmpeg = require('fluent-ffmpeg'),
+    ffmpegPath = require('ffmpeg-static'),
+    ffprobePath = require('ffprobe-static').path
 const { thumbnailsPath } = require('./file-manager')
+
+ffmpeg.setFfmpegPath(ffmpegPath)
+ffmpeg.setFfprobePath(ffprobePath)
 
 module.exports = class PreviewController {
 
@@ -12,7 +17,7 @@ module.exports = class PreviewController {
         this.loadMetadata()
             .then(_ => {
                 // looks like there's a delay of about 0.17 between the touch and the real action
-                this.startTime = this.stream.start_time + 0.17 
+                this.startTime = parseFloat(this.stream.start_time) + 0.17
                 completion(this)
             })
     }
