@@ -8,22 +8,23 @@ const Path = require('path')
 
 class FileManager {
 
-    constructor() {
-        this.basePath = app.getPath('userData')
-        this.logsPath = `${this.basePath}/logs`
-        this.recordingsPath = `${this.basePath}/recordings`
-        this.thumbnailsPath = `${this.basePath}/thumbnails`
-        // this.initFolderIfNeeded(this.logsPath)
-        // this.initFolderIfNeeded(this.recordingsPath)
-        this.initFolderIfNeeded(this.thumbnailsPath)
+    static basePath = app.getPath('userData')
+    static logsPath = `${FileManager.basePath}/logs`
+    static recordingsPath = `${this.basePath}/recordings`
+    static thumbnailsPath = `${this.basePath}/thumbnails`
+
+    static prepareFileSystem() {
+        FileManager.initFolderIfNeeded(FileManager.logsPath)
+        FileManager.initFolderIfNeeded(FileManager.recordingsPath)
+        FileManager.initFolderIfNeeded(FileManager.thumbnailsPath)
     }
 
-    initFolderIfNeeded(folder) {
+    static initFolderIfNeeded(folder) {
         fs.mkdir(folder, _ => { })
-        this.deleteFolderRecursive(folder)
+        FileManager.deleteFolderRecursive(folder)
     }
 
-    deleteFolderRecursive(path) {
+    static deleteFolderRecursive(path) {
         if (fs.existsSync(path)) {
             fs.readdirSync(path).forEach((file, index) => {
                 const curPath = Path.join(path, file)
@@ -37,10 +38,9 @@ class FileManager {
     }
 }
 
-let fileManager = new FileManager()
-
 module.exports = {
-    logsPath: fileManager.logsPath,
-    recordingsPath: fileManager.recordingsPath,
-    thumbnailsPath: fileManager.thumbnailsPath
+    prepareFileSystem: FileManager.prepareFileSystem,
+    logsPath: FileManager.logsPath,
+    recordingsPath: FileManager.recordingsPath,
+    thumbnailsPath: FileManager.thumbnailsPath
 }

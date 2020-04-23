@@ -62,36 +62,35 @@ renderer.registerListeners((videoPath, timeline) => {
     renderer.addVideoHtml(videoPath, videoPreviewElement)
 
     // probably there's a better way to do this...
-    new PreviewController(videoPath, timeline, previewController => {
-        console.log('1/5 converting to mp4...')
-        previewController
-            .convertToMP4(progress => {
-                console.log(progress)
-            })
-            .then(_ => {
-                console.log('2/5 loading metadata...')
-                previewController.loadMetadata()
-                    .then(_ => {
-                        console.log('3/5 adding overlays...')
-                        previewController
-                            .addTouches(progress => {
-                                console.log(progress)
-                            })
-                            .then(_ => {
-                                renderer.addVideoHtml(previewController.videoPath, videoPreviewElement)
-                                console.log('4/5 building timeline...')
-                                previewController
-                                    .makeTimelineScreenshots(timelineElement.clientWidth, timelineElement.clientHeight)
-                                    .then(screenshotsPaths => {
-                                        console.log('5/5 everything rendered')
-                                        renderer.showScreenshots(screenshotsPaths, timelineElement)
-                                    })
-                            })
-                    })
-            })
-            .catch(error => {
-                console.log(error)
-            })
-    })
+    let previewController = new PreviewController(videoPath, timeline)
+    console.log('1/5 converting to mp4...')
+    previewController
+        .convertToMP4(progress => {
+            console.log(progress)
+        })
+        .then(_ => {
+            console.log('2/5 loading metadata...')
+            previewController.loadMetadata()
+                .then(_ => {
+                    console.log('3/5 adding overlays...')
+                    previewController
+                        .addTouches(progress => {
+                            console.log(progress)
+                        })
+                        .then(_ => {
+                            renderer.addVideoHtml(previewController.videoPath, videoPreviewElement)
+                            console.log('4/5 building timeline...')
+                            previewController
+                                .makeTimelineScreenshots(timelineElement.clientWidth, timelineElement.clientHeight)
+                                .then(screenshotsPaths => {
+                                    console.log('5/5 everything rendered')
+                                    renderer.showScreenshots(screenshotsPaths, timelineElement)
+                                })
+                        })
+                })
+        })
+        .catch(error => {
+            console.log(error)
+        })
 
 })

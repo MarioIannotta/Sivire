@@ -8,18 +8,12 @@ ffmpeg.setFfprobePath(ffprobePath)
 
 module.exports = class PreviewController {
 
-    constructor(videoPath, timeline, completion) {
+    constructor(videoPath, timeline) {
         this.videoPath = videoPath
         this.timeline = timeline
         this.stream = null
         this.thumbnailsPath = thumbnailsPath
-        this.startTime = 0
-        this.loadMetadata()
-            .then(_ => {
-                // looks like there's a delay of about 0.17 between the touch and the real action
-                this.startTime = parseFloat(this.stream.start_time) + 0.17
-                completion(this)
-            })
+        this.startTime = 0.3 // looks like there's an offset of 0.3 seconds
     }
 
     convertToMP4(onProgress) {
@@ -56,34 +50,43 @@ module.exports = class PreviewController {
     }
 
     addTouches(onProgress) {
-        let touches = this.timeline.reduce((touches, event) => {
-            if (event.touches) {
-                touches.push(...event.touches)
-            }
-            return touches
-        }, [])
+        var filters = []
+        let eventDuration = 0.2
         var index = -1
-        let filters = touches.map(event => {
-            let eventStart = event.timestamp - this.startTime
-            let eventDuration = 0.2
-            let inputs = ''
-            if (index == -1) {
-                inputs = '[0:v]'
-            } else {
-                inputs = `[${index}][1:v]`
-            }
-            index++
-            return {
-                filter: "overlay",
-                options: {
-                    enable: `between(t,${eventStart},${eventStart + eventDuration})`,
-                    x: event.location.x,
-                    y: event.location.y
-                },
-                inputs: inputs,
-                outputs: `${index}`
-            }
-        })
+        this.timeline
+            .filter(event => event.event === "gesture")
+            .forEach(event => {
+                let touches = event.touches || []
+                touches.forEach((touch, touchIndex) => {
+                    let inputs = ''
+                    if (index == -1) {
+                        inputs = '[0:v]'
+                    } else {
+                        inputs = `[${index}][1:v]`
+                    }
+                    index++
+                    let touchStart = touch.timestamp - this.startTime
+                    var touchEnd = touchStart - this.startTime + eventDuration
+                    let nextEvent = touches[touchIndex + 1]
+                    if (nextEvent) {
+                        touchEnd = nextEvent.timestamp - this.startTime
+                    } else if (touches.length == 2) { 
+                        // touches.length == 2 --> simple taps: let's increase the event duration so it is a little bit more visible
+                        let additionalDuration = touches.length == 2 ? 0.3 : 0
+                        touchEnd += additionalDuration
+                    }
+                    filters.push({
+                        filter: "overlay",
+                        options: {
+                            enable: `between(t,${roundDown(touchStart)},${roundUp(touchEnd)})`,
+                            x: touch.location.x,
+                            y: touch.location.y
+                        },
+                        inputs: inputs,
+                        outputs: `${index}`
+                    })
+                })
+            })
         let newVideoPath = this.videoPath.replace('.mp4', ' - final.mp4')
         return new Promise((resolve, reject) => {
             ffmpeg(this.videoPath)
@@ -133,5 +136,11 @@ module.exports = class PreviewController {
                 })
         })
     }
+}
 
+function roundDown(value) {
+    return Math.floor(value * 100) / 100
+}
+function roundUp(value) {
+    return Math.ceil(value * 100) / 100
 }
