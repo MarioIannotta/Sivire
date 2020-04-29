@@ -13,7 +13,7 @@ module.exports = class PreviewController {
         this.timeline = timeline
         this.stream = null
         this.thumbnailsPath = thumbnailsPath
-        this.startTime = 0.3 // looks like there's an offset of 0.3 seconds
+        this.startTime = 0.2 // looks like there's an offset of 0.2 seconds
     }
 
     convertToMP4(onProgress) {
@@ -72,13 +72,13 @@ module.exports = class PreviewController {
                         touchEnd = nextEvent.timestamp - this.startTime
                     } else if (touches.length == 2) { 
                         // touches.length == 2 --> simple taps: let's increase the event duration so it is a little bit more visible
-                        let additionalDuration = touches.length == 2 ? 0.3 : 0
+                        let additionalDuration = touches.length == 2 ? 0.2 : 0
                         touchEnd += additionalDuration
                     }
                     filters.push({
                         filter: "overlay",
                         options: {
-                            enable: `between(t,${roundDown(touchStart)},${roundUp(touchEnd)})`,
+                            enable: `between(t,${touchStart},${touchEnd})`,
                             x: touch.location.x,
                             y: touch.location.y
                         },
@@ -106,41 +106,4 @@ module.exports = class PreviewController {
                 .run()
         })
     }
-
-    makeTimelineScreenshots(availableWidth, availableHeight) {
-        let ratio = this.stream.width / this.stream.height
-        let scale = 3
-        let screenshotHeight = Math.round(availableHeight)
-        let screenshotWidth = Math.round(availableHeight * ratio)
-        let numberOfScreenshots = Math.ceil(availableWidth / screenshotWidth)
-        var filenames = []
-        return new Promise(resolve => {
-            ffmpeg(this.videoPath)
-                .screenshots({
-                    count: numberOfScreenshots,
-                    filename: 'thumbnail-at-%s-seconds.png',
-                    folder: this.thumbnailsPath,
-                    size: `${screenshotWidth * scale}x${screenshotHeight * scale}`
-                })
-                .on('error', error => {
-                    reject(error)
-                })
-                .on('filenames', _filenames => {
-                    filenames = _filenames
-                })
-                .on('end', _ => {
-                    let screenshotPaths = filenames.map(filename => {
-                        return `${this.thumbnailsPath}/${filename}`
-                    })
-                    resolve(screenshotPaths)
-                })
-        })
-    }
-}
-
-function roundDown(value) {
-    return Math.floor(value * 100) / 100
-}
-function roundUp(value) {
-    return Math.ceil(value * 100) / 100
 }

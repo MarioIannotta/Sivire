@@ -30,16 +30,16 @@ class Renderer {
 
     addVideoHtml(path, element) {
         element.innerHTML = `
-        <video height="100%" controls>
+        <video height="100%" id="video" controls>
             <source src="${path}" type="video/mp4">
         </video>`
     }
 
-    showScreenshots(screenshotsPaths, element) {
+    showScreenshots(screenshotsPaths, timelineElement) {
         let images = screenshotsPaths.map(screenshotPath => {
             return `<img src="${screenshotPath}" height="100%" class="screenshot"/>`
         })
-        element.innerHTML = images.join("")
+        timelineElement.innerHTML = images.join("")
     }
 }
 
@@ -54,7 +54,10 @@ function injectSystemColors() {
 injectSystemColors()
 
 let videoPreviewElement = document.getElementById('video-preview')
+let videoElement = document.getElementById('video')
 let timelineElement = document.getElementById('timeline')
+
+console.log(videoPreviewElement.clientWidth)
 
 let renderer = new Renderer()
 
@@ -63,34 +66,27 @@ renderer.registerListeners((videoPath, timeline) => {
 
     // probably there's a better way to do this...
     let previewController = new PreviewController(videoPath, timeline)
-    console.log('1/5 converting to mp4...')
+    console.log('1/4 converting to mp4...')
     previewController
         .convertToMP4(progress => {
             console.log(progress)
         })
         .then(_ => {
-            console.log('2/5 loading metadata...')
+            console.log('2/4 loading metadata...')
             previewController.loadMetadata()
                 .then(_ => {
-                    console.log('3/5 adding overlays...')
+                    console.log('3/4 adding overlays...')
                     previewController
                         .addTouches(progress => {
                             console.log(progress)
                         })
                         .then(_ => {
                             renderer.addVideoHtml(previewController.videoPath, videoPreviewElement)
-                            console.log('4/5 building timeline...')
-                            previewController
-                                .makeTimelineScreenshots(timelineElement.clientWidth, timelineElement.clientHeight)
-                                .then(screenshotsPaths => {
-                                    console.log('5/5 everything rendered')
-                                    renderer.showScreenshots(screenshotsPaths, timelineElement)
-                                })
+                            console.log('4/4 everything rendered...')
                         })
                 })
         })
         .catch(error => {
             console.log(error)
         })
-
 })
