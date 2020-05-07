@@ -18,7 +18,8 @@
     "ffmpeg-static": "^4.1.1",
     "ffprobe": "^1.1.0",
     "ffprobe-static": "^3.0.0",
-    "fluent-ffmpeg": "^2.1.2"
+    "fluent-ffmpeg": "^2.1.2",
+    "image-size": "^0.8.3"
   },
   "devDependencies": {
     "electron-packager": "^14.2.1"

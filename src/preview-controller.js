@@ -8,9 +8,11 @@ ffmpeg.setFfprobePath(ffprobePath)
 
 module.exports = class PreviewController {
 
-    constructor(videoPath, timeline) {
+    constructor(videoPath, timeline, indicatorImagePath, indicatorOffset) {
         this.videoPath = videoPath
         this.timeline = timeline
+        this.indicatorImagePath = indicatorImagePath
+        this.indicatorOffset = indicatorOffset
         this.stream = null
         this.thumbnailsPath = thumbnailsPath
         this.startTime = 0.2 // looks like there's an offset of 0.2 seconds
@@ -26,7 +28,7 @@ module.exports = class PreviewController {
                     reject(error)
                 })
                 .on('progress', progress => {
-                    onProgress(progress.percent)
+                    onProgress(progress.percent / 100)
                 })
                 .on('end', _ => {
                     this.videoPath = newPath
@@ -70,7 +72,7 @@ module.exports = class PreviewController {
                     let nextEvent = touches[touchIndex + 1]
                     if (nextEvent) {
                         touchEnd = nextEvent.timestamp - this.startTime
-                    } else if (touches.length == 2) { 
+                    } else if (touches.length == 2) {
                         // touches.length == 2 --> simple taps: let's increase the event duration so it is a little bit more visible
                         let additionalDuration = touches.length == 2 ? 0.2 : 0
                         touchEnd += additionalDuration
@@ -79,8 +81,8 @@ module.exports = class PreviewController {
                         filter: "overlay",
                         options: {
                             enable: `between(t,${touchStart},${touchEnd})`,
-                            x: touch.location.x,
-                            y: touch.location.y
+                            x: touch.location.x + this.indicatorOffset.x,
+                            y: touch.location.y + this.indicatorOffset.y
                         },
                         inputs: inputs,
                         outputs: `${index}`
@@ -90,10 +92,10 @@ module.exports = class PreviewController {
         let newVideoPath = this.videoPath.replace('.mp4', ' - final.mp4')
         return new Promise((resolve, reject) => {
             ffmpeg(this.videoPath)
-                .input(`${__dirname}/images/Indicator.png`)
+                .input(`${this.indicatorImagePath}`)
                 .complexFilter(filters, `${index}`)
                 .on('progress', progress => {
-                    onProgress(progress.percent)
+                    onProgress(progress.percent / 100)
                 })
                 .on('end', _ => {
                     this.videoPath = newVideoPath
