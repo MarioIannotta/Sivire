@@ -131,7 +131,7 @@ function openSettingsWindow() {
 
 function openVideoPreviewWindow(videoPath, timeline) {
     let videoPreviewWindow = new BrowserWindow({
-        width: 780,
+        width: 800,
         height: 700,
         vibrancy: 'under-window',
         webPreferences: {
@@ -141,8 +141,9 @@ function openVideoPreviewWindow(videoPath, timeline) {
     videoPreviewWindow.loadURL(`file://${__dirname}/video-preview.html`)
     videoPreviewWindow.on('closed', () => {
         videoPreviewWindow = null
+        app.dock.hide()
     })
-    // videoPreviewWindow.openDevTools()
+    app.dock.show()
     videoPreviewWindow.show()
     videoPreviewWindow.webContents.on('did-finish-load', _ => {
         videoPreviewWindow.webContents.send('video-path', videoPath)

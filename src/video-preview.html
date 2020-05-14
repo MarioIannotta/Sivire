@@ -1,6 +1,8 @@
 <html>
 
-<head></head>
+<head>
+    <title>Video preview</title>
+</head>
 <style>
     html {
         --accent-color: blue;
@@ -64,9 +66,13 @@
     }
 
     aside .section {
-        padding: 30px 0px;
+        padding: 30px 0px 10px 0px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         position: relative;
+    }
+
+    aside #gestures-section {
+        padding-bottom: 30px;
     }
 
     aside #gesture-indicator-image-selection label {
@@ -132,7 +138,7 @@
         margin-right: 10px;
     }
 
-    aside #generate-video-button {
+    aside .button {
         display: inline;
         border-radius: 5px;
         color: #ffffff;
@@ -143,19 +149,19 @@
         opacity: 0.9;
     }
 
-    aside #generate-video-button:hover {
+    aside .button:hover {
         opacity: 1;
     }
 
-    aside #generate-video-button[disabled] {
+    aside .button[disabled] {
         opacity: 0.4;
     }
 
     aside #current-activity {
-        display: inline;
+        display: block;
         font-size: 14px;
         opacity: 0.7;
-        margin-left: 20px;
+        margin-top: 30px;
     }
 
     aside #progress-indicator {
@@ -164,6 +170,12 @@
         background-color: var(--accent-color);
         position: absolute;
         bottom: 0px;
+    }
+
+    aside #generate-video-section {
+        display: block;
+        float: left;
+        margin-right: 10px;
     }
 </style>
 
@@ -176,7 +188,7 @@
         </div>
     </main>
     <aside>
-        <div class="section">
+        <div class="section" id="gestures-section">
             <div class="inline-element">
                 <h3>Tap indicator</h3>
                 <label>Preview</label>
@@ -204,8 +216,15 @@
                 </p>
             </div>
         </div>
+        <p id="no-gestures-section-hint">
+            No events received. It looks like <a href="https://github.com/marioIannotta/siviresdk">SivireSDK</a> it is
+            not installed or proper configured on your application.
+        </p>
         <div class="section">
-            <div id="generate-video-button">Generate video</div>
+            <div id="generate-video-section">
+                <div id="generate-video-button" class="button">Add gestures</div>
+            </div>
+            <div id="save-video-button" class="button">Save video</div>
             <p id="current-activity"></p>
             <div id="progress-indicator"></div>
         </div>

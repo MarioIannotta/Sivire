@@ -18,7 +18,7 @@ module.exports = class PreviewController {
         this.startTime = 0.2 // looks like there's an offset of 0.2 seconds
     }
 
-    convertToMP4(onProgress) {
+    async convertToMP4(onProgress) {
         return new Promise((resolve, reject) => {
             let newPath = this.videoPath.replace('.mov', '.mp4')
             ffmpeg(this.videoPath)
@@ -38,7 +38,7 @@ module.exports = class PreviewController {
         })
     }
 
-    loadMetadata() {
+    async loadMetadata() {
         return new Promise((resolve, reject) => {
             ffmpeg.ffprobe(this.videoPath, (error, metadata) => {
                 if (error) {
@@ -51,7 +51,7 @@ module.exports = class PreviewController {
         })
     }
 
-    addTouches(onProgress) {
+    async addTouches(onProgress) {
         var filters = []
         let eventDuration = 0.2
         var index = -1
@@ -91,21 +91,27 @@ module.exports = class PreviewController {
             })
         let newVideoPath = this.videoPath.replace('.mp4', ' - final.mp4')
         return new Promise((resolve, reject) => {
-            ffmpeg(this.videoPath)
-                .input(`${this.indicatorImagePath}`)
-                .complexFilter(filters, `${index}`)
-                .on('progress', progress => {
-                    onProgress(progress.percent / 100)
-                })
-                .on('end', _ => {
-                    this.videoPath = newVideoPath
-                    resolve()
-                })
-                .on('error', error => {
-                    reject(error)
-                })
-                .output(newVideoPath)
-                .run()
+            if (filters.length > 0) {
+                ffmpeg(this.videoPath)
+                    .input(`${this.indicatorImagePath}`)
+                    .complexFilter(filters, `${index}`)
+                    .on('progress', progress => {
+                        onProgress(progress.percent / 100)
+                    })
+                    .on('end', _ => {
+                        this.videoPath = newVideoPath
+                        console.log("ooooooooook")
+                        resolve()
+                    })
+                    .on('error', error => {
+                        reject(error)
+                    })
+                    .output(newVideoPath)
+                    .run()
+            } else {
+                onProgress(1)
+                resolve()
+            }
         })
     }
 }

@@ -1,29 +1,26 @@
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, shell } = require('electron')
 const { systemPreferences, dialog } = require('electron').remote
 const PreviewController = require('./preview-controller')
 const sizeOf = require('image-size')
+const fs = require('fs')
 
 class Renderer {
 
     constructor(htmlElements) {
         this.indicatorImagePath = `${__dirname}/images/DefaultIndicator.png`
         this.indicatorImageSize = { width: 0, height: 0 }
-        this.videoElement = htmlElements.video
-        this.indicatorPreviewElement = htmlElements.indicatorPreview
-        this.indicatorImageElement = htmlElements.indicatorImage
-        this.tapPointElement = htmlElements.tapPoint
-        this.xCoordinateElement = htmlElements.coordinate.x
-        this.yCoordinateElement = htmlElements.coordinate.y
-        this.selectIndicatorImageElement = htmlElements.selectIndicatorImage
-        this.generateVideoElement = htmlElements.generateVideo
-        this.currentActivityElement = htmlElements.currentActivity
-        this.progressIndicatorElement = htmlElements.progressIndicator
+        this.html = htmlElements
+        this.renderedVideo = null
 
         this.setIndicatorImage(this.indicatorImagePath)
         this.setupTapPointPreview()
         this.setupSelectImageButton()
         this.setupGenerateVideoButton()
-        this.registerListeners(_ => { this.showOriginalVideo() })
+        this.setupSaveVideoButton()
+        this.registerListeners(_ => {
+            this.showOriginalVideo()
+            this.hideGesturesSectionIfNeeded()
+        })
     }
 
     videoPathPromise = new Promise(resolve => {
@@ -53,24 +50,24 @@ class Renderer {
     }
 
     showVideo(path) {
-        this.videoElement.style.width = this.videoElement.clientWidth // avoid flickering when changing video source
-        this.videoElement.src = `${path}?t=${Date.now()}` // avoid cache 
+        this.html.video.style.width = this.html.video.clientWidth // avoid flickering when changing video source
+        this.html.video.src = `${path}?t=${Date.now()}` // avoid cache 
     }
 
     setupTapPointPreview() {
-        let initialPoint = { x: this.indicatorPreviewElement.clientWidth / 2, y: this.indicatorPreviewElement.clientHeight / 2 }
+        let initialPoint = { x: this.html.indicatorPreview.clientWidth / 2, y: this.html.indicatorPreview.clientHeight / 2 }
         this.setTapPointPosition(initialPoint)
         var isDragEnabled = false
-        this.indicatorPreviewElement.addEventListener('mouseup', _ => {
+        this.html.indicatorPreview.addEventListener('mouseup', _ => {
             isDragEnabled = false
         })
-        this.indicatorPreviewElement.addEventListener('mouseout', _ => {
+        this.html.indicatorPreview.addEventListener('mouseout', _ => {
             isDragEnabled = false
         })
-        this.indicatorPreviewElement.addEventListener('mousedown', _ => {
+        this.html.indicatorPreview.addEventListener('mousedown', _ => {
             isDragEnabled = true
         })
-        this.indicatorPreviewElement.addEventListener('mousemove', event => {
+        this.html.indicatorPreview.addEventListener('mousemove', event => {
             if (isDragEnabled) {
                 let currentPoint = { x: event.offsetX, y: event.offsetY }
                 this.setTapPointPosition(currentPoint)
@@ -80,17 +77,17 @@ class Renderer {
 
     setTapPointPosition(point) {
         // the fours are there to take into account the pointer size
-        this.tapPointElement.style.left = point.x - 4
-        this.tapPointElement.style.top = point.y - 4
-        let imageRelativeX = (point.x - this.indicatorImageElement.offsetLeft) / this.indicatorImageElement.clientWidth
-        let imageRelativeY = (point.y - this.indicatorImageElement.offsetTop) / this.indicatorImageElement.clientHeight
+        this.html.tapPoint.style.left = point.x - 4
+        this.html.tapPoint.style.top = point.y - 4
+        let imageRelativeX = (point.x - this.html.indicatorImage.offsetLeft) / this.html.indicatorImage.clientWidth
+        let imageRelativeY = (point.y - this.html.indicatorImage.offsetTop) / this.html.indicatorImage.clientHeight
         this.indicatorImagePosition = { x: imageRelativeX, y: imageRelativeY }
-        this.xCoordinateElement.value = `${imageRelativeX.toFixed(2)} %`
-        this.yCoordinateElement.value = `${imageRelativeY.toFixed(2)} %`
+        this.html.coordinate.x.value = `${imageRelativeX.toFixed(2)} %`
+        this.html.coordinate.y.value = `${imageRelativeY.toFixed(2)} %`
     }
 
     setupSelectImageButton() {
-        this.selectIndicatorImageElement.addEventListener('click', _ => {
+        this.html.selectIndicatorImage.addEventListener('click', _ => {
             let fileExplorerOptions = {
                 properties: ['openFile'],
                 filters: [
@@ -107,30 +104,32 @@ class Renderer {
 
     setIndicatorImage(path) {
         this.indicatorImagePath = path
-        this.indicatorImageElement.style = `background-image: url('${this.indicatorImagePath}')`
+        this.html.indicatorImage.style = `background-image: url('${this.indicatorImagePath}')`
         sizeOf(`${path}`, (_, dimensions) => {
             this.indicatorImageSize = { width: dimensions.width, height: dimensions.height }
         })
     }
 
     setupGenerateVideoButton() {
-        this.generateVideoElement.addEventListener('click', _ => {
+        this.html.generateVideoButton.addEventListener('click', _ => {
             this.onGenerateVideoButtonDidTap()
         })
     }
 
-    setGenerateVideoButtonEnabled(isEnabled) {
+    setButtonsEnabled(isEnabled) {
         if (isEnabled) {
-            this.generateVideoElement.removeAttribute("disabled")
+            this.html.generateVideoButton.removeAttribute("disabled")
+            this.html.saveVideoButton.removeAttribute("disabled")
         } else {
-            this.generateVideoElement.setAttribute("disabled", "disabled")
+            this.html.generateVideoButton.setAttribute("disabled", "disabled")
+            this.html.saveVideoButton.setAttribute("disabled", "disabled")
         }
     }
 
     showCurrentActivity(activityDescription) {
         let hasActivity = activityDescription != null
-        this.currentActivityElement.style.display = hasActivity ? 'inline' : 'none'
-        this.currentActivityElement.innerHTML = activityDescription
+        this.html.currentActivity.style.display = hasActivity ? 'inherit' : 'none'
+        this.html.currentActivity.innerHTML = activityDescription
     }
 
     registerSteps(steps) {
@@ -162,15 +161,52 @@ class Renderer {
                 .replace(/:/g, '.')
                 .replace(/\//g, '-')
                 .replace(', ', ' at ')
-            this.showCurrentActivity(`Video generated at ${dateAsSting}`)
+            this.showCurrentActivity(`Gesture added at ${dateAsSting}`)
         }
-        this.progressIndicatorElement.style.width = `${progressAverage * 100}%`
+        this.html.progressIndicator.style.width = `${progressAverage * 100}%`
     }
 
     getIndicatorOffset() {
         let x = this.indicatorImageSize.width * this.indicatorImagePosition.x
         let y = this.indicatorImageSize.height * this.indicatorImagePosition.y
         return { x: -x.toFixed(2), y: -y.toFixed(2) }
+    }
+
+    hideGesturesSectionIfNeeded() {
+        let shouldHideGesturesSection = this.timeline.length <= 2 // just start and stop event
+        this.html.gesturesSection.style.opacity = shouldHideGesturesSection ? 0.4 : 1
+        this.html.gesturesSection.style.pointerEvents = shouldHideGesturesSection ? "none" : "inherit"
+        this.html.noGesturesSectionHint.style.display = shouldHideGesturesSection ? "inherit" : "none"
+        this.html.generateVideoSection.style.display = shouldHideGesturesSection ? "none" : "inherit"
+        if (shouldHideGesturesSection) {
+            document.addEventListener('click', function (event) {
+                if (event.target.tagName === 'A' && event.target.href.startsWith('http')) {
+                    event.preventDefault()
+                    shell.openExternal(event.target.href)
+                }
+            })
+        }
+    }
+
+    setupSaveVideoButton() {
+        this.html.saveVideoButton.addEventListener('click', _ => {
+            let videoPath = this.renderedVideo || this.videoPath
+            let videoComponents = videoPath.split("/")
+            let videoName = videoComponents[videoComponents.length - 1]
+            var options = {
+                title: "Save file",
+                defaultPath: `~/${videoName}`,
+                buttonLabel: "Save"
+            }
+
+            dialog.showSaveDialog(options)
+                .then((result) => {
+                    let filePath = result.filePath
+                    fs.copyFile(videoPath, filePath, error => {
+                        console.log(error)
+                    })
+                })
+        })
     }
 }
 
@@ -194,9 +230,13 @@ let renderer = new Renderer({
         y: document.getElementById('y-coordinate')
     },
     selectIndicatorImage: document.getElementById('gesture-indicator-image-select-button'),
-    generateVideo: document.getElementById('generate-video-button'),
+    generateVideoButton: document.getElementById('generate-video-button'),
+    generateVideoSection: document.getElementById('generate-video-section'),
     currentActivity: document.getElementById('current-activity'),
-    progressIndicator: document.getElementById('progress-indicator')
+    progressIndicator: document.getElementById('progress-indicator'),
+    gesturesSection: document.getElementById('gestures-section'),
+    noGesturesSectionHint: document.getElementById('no-gestures-section-hint'),
+    saveVideoButton: document.getElementById('save-video-button'),
 })
 
 renderer.registerSteps({
@@ -206,33 +246,26 @@ renderer.registerSteps({
 })
 
 renderer.onGenerateVideoButtonDidTap = _ => {
+    addGestures()
+}
+
+async function addGestures() {
     renderer.showOriginalVideo()
     let indicatorOffset = renderer.getIndicatorOffset()
     let previewController = new PreviewController(renderer.videoPath, renderer.timeline, renderer.indicatorImagePath, indicatorOffset)
-    renderer.setGenerateVideoButtonEnabled(false)
+    renderer.setButtonsEnabled(false)
     renderer.resetProgress()
-    previewController
-        .convertToMP4(progress => {
-            renderer.setStepProgress("mp4", progress)
-        })
-        .then(_ => {
-            renderer.setStepProgress("mp4", 1)
-            previewController.loadMetadata()
-                .then(_ => {
-                    renderer.setStepProgress("metadata", 1)
-                    previewController
-                        .addTouches(progress => {
-                            renderer.setStepProgress("overlays", progress)
-                        })
-                        .then(_ => {
-                            renderer.setStepProgress("overlays", 1)
-                            renderer.showVideo(previewController.videoPath)
-                            renderer.setGenerateVideoButtonEnabled(true)
-                        })
-                })
-        })
-        .catch(error => {
-            renderer.setGenerateVideoButtonEnabled(true)
-            console.log(error)
-        })
+    await previewController.convertToMP4(progress => {
+        renderer.setStepProgress("mp4", progress)
+    })
+    renderer.setStepProgress("mp4", 1)
+    await previewController.loadMetadata()
+    renderer.setStepProgress("metadata", 1)
+    await previewController.addTouches(progress => {
+        renderer.setStepProgress("overlays", progress)
+    })
+    renderer.setStepProgress("overlays", 1)
+    renderer.renderedVideo = previewController.videoPath
+    renderer.showVideo(previewController.videoPath)
+    renderer.setButtonsEnabled(true)
 }
