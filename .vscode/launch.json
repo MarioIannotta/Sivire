@@ -7,8 +7,13 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-            "args" : ["."],
+            "args": [
+                "."
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
             "outputCapture": "std"
-          }
+        }
     ]
 }
