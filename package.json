@@ -4,24 +4,44 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-packager . Sivire --overwrite --platform=mas --icon=./src/images/Icon.icns --out=build; open build"
+    "build": "electron-packager . Sivire --overwrite --platform=mas --icon=./src/images/Icon.icns --app-bundle-id=com.marioiannotta.sivire --out=build"
   },
   "keywords": [],
   "author": "Mario Iannotta",
   "license": "ISC",
+  "build": {
+    "appId": "com.marioiannotta.sivire",
+    "mac": {
+      "icon": "./src/images/Icon.icns",
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "mas"
+      ]
+    },
+    "mas": {
+      "hardenedRuntime": false,
+      "provisioningProfile": "./distribution/embedded.provisionprofile",
+      "entitlements": "./distribution/entitlements.mas.plist",
+      "entitlementsInherit": "./distribution/entitlements.mas.inherit.plist",
+      "gatekeeperAssess": false,
+      "asarUnpack": []
+    },
+    "directories": {
+      "output": "archive"
+    }
+  },
   "dependencies": {
-    "electron": "^8.0.0",
-    "electron-reload": "^1.5.0",
-    "electron-store": "^5.1.1",
     "express": "^4.17.1",
     "ffmpeg-static": "^4.1.1",
     "ffprobe": "^1.1.0",
     "ffprobe-static": "^3.0.0",
     "fluent-ffmpeg": "^2.1.2",
-    "image-size": "^0.8.3"
+    "image-size": "^0.8.3",
+    "electron-store": "^5.1.1"
   },
   "devDependencies": {
+    "electron": "^8.0.0",
+    "electron-reload": "^1.5.0",
     "electron-packager": "^14.2.1"
   }
 }

@@ -2,7 +2,10 @@ const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron')
 const { spawnServer, startRecordingGestures, stopRecordingGestures } = require('./gestures-server')
 const { prepareFileSystem } = require('./file-manager')
 const SimulatorsController = require('./simulators-controller')
-require('electron-reload')(__dirname)
+
+if (process.env.NODE_ENV === 'development') {
+    require('electron-reload')(__dirname)
+}
 
 let settingsWindow = null
 let tray
